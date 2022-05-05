@@ -23,9 +23,14 @@ func (a *App) SaveFile(reader io.Reader, workspaceID, rootID, filename string) (
 	createdFilename := fmt.Sprintf(`%s%s`, utils.NewID(utils.IDTypeNone), fileExtension)
 	filePath := filepath.Join(workspaceID, rootID, createdFilename)
 
-	_, appErr := a.filesBackend.WriteFile(reader, filePath)
+	fileSize, appErr := a.filesBackend.WriteFile(reader, filePath)
 	if appErr != nil {
 		return "", fmt.Errorf("unable to store the file in the files storage: %w", appErr)
+	}
+
+	err := a.store.SaveFileInfo(createdFilename[1:], createdFilename, strings.TrimLeft(fileExtension, "."), fileSize)
+	if appErr != nil {
+		return "", err
 	}
 
 	return createdFilename, nil

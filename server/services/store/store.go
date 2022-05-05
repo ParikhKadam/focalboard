@@ -100,6 +100,8 @@ type Store interface {
 	DBType() string
 
 	IsErrNotFound(err error) bool
+
+	SaveFileInfo(id, fileName, extension string, size int64) error
 }
 
 // ErrNotFound is an error type that can be returned by store APIs when a query unexpectedly fetches no records.
