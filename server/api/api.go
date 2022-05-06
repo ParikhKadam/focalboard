@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -1336,6 +1337,17 @@ func (a *API) handleServeFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", contentType)
+
+	isArchived, err := a.app.IsFileArchived(filename)
+	if err != nil {
+		a.errorResponse(w, r.URL.Path, http.StatusInternalServerError, "", err)
+		return
+	}
+
+	if isArchived {
+		a.errorResponse(w, r.URL.Path, http.StatusBadRequest, "file archived", errors.New("file archived"))
+		return
+	}
 
 	fileReader, err := a.app.GetFileReader(workspaceID, rootID, filename)
 	if err != nil {

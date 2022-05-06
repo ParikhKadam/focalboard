@@ -1,7 +1,9 @@
 package app
 
 import (
+	"errors"
 	"fmt"
+	"github.com/mattermost/focalboard/server/model"
 	"io"
 	"path/filepath"
 	"strings"
@@ -29,12 +31,36 @@ func (a *App) SaveFile(reader io.Reader, workspaceID, rootID, filename string) (
 		return "", fmt.Errorf("unable to store the file in the files storage: %w", appErr)
 	}
 
-	err := a.store.SaveFileInfo(createdFilename[1:], fullFilename, strings.TrimLeft(fileExtension, "."), fileSize)
+	fileInfo := &model.FileInfo{
+		Id:        createdFilename[1:],
+		Name:      fullFilename,
+		Extension: fileExtension,
+		Size:      fileSize,
+		CreateAt:  utils.GetMillis(),
+		DeleteAt:  0,
+		Archived:  false,
+	}
+	err := a.store.SaveFileInfo(fileInfo)
 	if appErr != nil {
 		return "", err
 	}
 
 	return fullFilename, nil
+}
+
+func (a *App) IsFileArchived(filename string) (bool, error) {
+	if len(filename) == 0 {
+		return false, errors.New("IsFileArchived: empty filename not allowed")
+	}
+
+	parts := strings.Split(filename, ".")
+	fileInfoId := parts[0][1:]
+	fileInfo, err := a.store.GetFileInfo(fileInfoId)
+	if err != nil {
+		return false, err
+	}
+
+	return fileInfo.Archived, nil
 }
 
 func (a *App) GetFileReader(workspaceID, rootID, filename string) (filestore.ReadCloseSeeker, error) {

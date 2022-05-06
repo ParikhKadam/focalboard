@@ -102,7 +102,7 @@ type Store interface {
 	IsErrNotFound(err error) bool
 
 	GetFileInfo(id string) (*model.FileInfo, error)
-	SaveFileInfo(id, fileName, extension string, size int64) error
+	SaveFileInfo(fileInfo *model.FileInfo) error
 }
 
 // ErrNotFound is an error type that can be returned by store APIs when a query unexpectedly fetches no records.

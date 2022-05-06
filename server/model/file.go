@@ -11,4 +11,5 @@ type FileInfo struct {
 	Size      int64  `json:"size"`
 	CreateAt  int64  `json:"createAt"`
 	DeleteAt  int64  `json:"deleteAt"`
+	Archived  bool   `json:"archived"`
 }

@@ -505,6 +505,7 @@ func (s *MattermostAuthLayer) GetFileInfo(id string) (*model.FileInfo, error) {
 	rawFileInfo, appErr := s.pluginAPI.GetFileInfo(id)
 	if appErr != nil {
 		s.logger.Error("error fetching fileinfo", mlog.String("id", id), mlog.Err(appErr))
+		return nil, appErr
 	}
 
 	fileInfo := &model.FileInfo{
@@ -519,7 +520,7 @@ func (s *MattermostAuthLayer) GetFileInfo(id string) (*model.FileInfo, error) {
 	return fileInfo, nil
 }
 
-func (s *MattermostAuthLayer) SaveFileInfo(id, fileName, extension string, size int64) error {
+func (s *MattermostAuthLayer) SaveFileInfo(fileInfo *model.FileInfo) error {
 	query := s.getQueryBuilder().
 		Insert("FileInfo").
 		Columns(
@@ -529,22 +530,29 @@ func (s *MattermostAuthLayer) SaveFileInfo(id, fileName, extension string, size 
 			"Extension",
 			"Size",
 			"DeleteAt",
+			"Archived",
 		).
 		Values(
-			id,
-			utils.GetMillis(),
-			fileName,
-			extension,
-			size,
-			0,
+			fileInfo.Id,
+			fileInfo.CreateAt,
+			fileInfo.Name,
+			fileInfo.Extension,
+			fileInfo.Size,
+			fileInfo.DeleteAt,
+			fileInfo.Archived,
 		)
+
+	sql, params, _ := query.ToSql()
+	
+	s.logger.Info(sql)
+	s.logger.Info(fmt.Sprintf("%v", params))
 
 	if _, err := query.Exec(); err != nil {
 		s.logger.Error(
 			"failed to save fileinfo",
-			mlog.String("file_name", fileName),
-			mlog.String("extension", extension),
-			mlog.Int64("size", size), mlog.Err(err),
+			mlog.String("file_name", fileInfo.Name),
+			mlog.Int64("size", fileInfo.Size),
+			mlog.Err(err),
 		)
 		return err
 	}

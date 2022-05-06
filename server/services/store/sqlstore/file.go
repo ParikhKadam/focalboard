@@ -3,11 +3,10 @@ package sqlstore
 import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/mattermost/focalboard/server/model"
-	"github.com/mattermost/focalboard/server/utils"
 	"github.com/mattermost/mattermost-server/v6/shared/mlog"
 )
 
-func (s *SQLStore) SaveFileInfo(id, fileName, extension string, size int64) error {
+func (s *SQLStore) SaveFileInfo(fileInfo *model.FileInfo) error {
 	query := s.getQueryBuilder(s.db).
 		Insert(s.tablePrefix+"file_info").
 		Columns(
@@ -16,21 +15,25 @@ func (s *SQLStore) SaveFileInfo(id, fileName, extension string, size int64) erro
 			"name",
 			"extension",
 			"size",
+			"delete_at",
+			"archived",
 		).
 		Values(
-			id,
-			utils.GetMillis(),
-			fileName,
-			extension,
-			size,
+			fileInfo.Id,
+			fileInfo.CreateAt,
+			fileInfo.Name,
+			fileInfo.Extension,
+			fileInfo.Size,
+			fileInfo.DeleteAt,
+			fileInfo.Archived,
 		)
 
 	if _, err := query.Exec(); err != nil {
 		s.logger.Error(
 			"failed to save fileinfo",
-			mlog.String("file_name", fileName),
-			mlog.String("extension", extension),
-			mlog.Int64("size", size), mlog.Err(err),
+			mlog.String("file_name", fileInfo.Name),
+			mlog.Int64("size", fileInfo.Size),
+			mlog.Err(err),
 		)
 		return err
 	}
