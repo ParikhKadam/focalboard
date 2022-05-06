@@ -20,20 +20,21 @@ func (a *App) SaveFile(reader io.Reader, workspaceID, rootID, filename string) (
 		fileExtension = ".jpg"
 	}
 
-	createdFilename := fmt.Sprintf(`%s%s`, utils.NewID(utils.IDTypeNone), fileExtension)
-	filePath := filepath.Join(workspaceID, rootID, createdFilename)
+	createdFilename := utils.NewID(utils.IDTypeNone)
+	fullFilename := fmt.Sprintf(`%s%s`, createdFilename, fileExtension)
+	filePath := filepath.Join(workspaceID, rootID, fullFilename)
 
 	fileSize, appErr := a.filesBackend.WriteFile(reader, filePath)
 	if appErr != nil {
 		return "", fmt.Errorf("unable to store the file in the files storage: %w", appErr)
 	}
 
-	err := a.store.SaveFileInfo(createdFilename[1:], createdFilename, strings.TrimLeft(fileExtension, "."), fileSize)
+	err := a.store.SaveFileInfo(createdFilename[1:], fullFilename, strings.TrimLeft(fileExtension, "."), fileSize)
 	if appErr != nil {
 		return "", err
 	}
 
-	return createdFilename, nil
+	return fullFilename, nil
 }
 
 func (a *App) GetFileReader(workspaceID, rootID, filename string) (filestore.ReadCloseSeeker, error) {

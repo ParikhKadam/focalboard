@@ -101,6 +101,7 @@ type Store interface {
 
 	IsErrNotFound(err error) bool
 
+	GetFileInfo(id string) (*model.FileInfo, error)
 	SaveFileInfo(id, fileName, extension string, size int64) error
 }
 

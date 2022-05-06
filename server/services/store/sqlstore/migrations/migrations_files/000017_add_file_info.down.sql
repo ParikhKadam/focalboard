@@ -1,5 +1,1 @@
-{{if .plugin}}
-    SELECT 1;
-{{else}}
-    DROP TABLE {{.prefix}}file_info;
-{{end}}
+DROP TABLE IF EXISTS {{.prefix}}file_info;

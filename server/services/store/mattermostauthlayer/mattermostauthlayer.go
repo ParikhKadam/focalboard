@@ -502,38 +502,21 @@ func (s *MattermostAuthLayer) CreatePrivateWorkspace(userID string) (string, err
 }
 
 func (s *MattermostAuthLayer) GetFileInfo(id string) (*model.FileInfo, error) {
-	query := s.getQueryBuilder().
-		Select(
-			"Id",
-			"CreateAt",
-			"Name",
-			"Extension",
-			"Size",
-		).
-		From("FileInfo").
-		Where(sq.Eq{
-			"Id":       id,
-			"DeleteAt": 0,
-		})
-
-	row := query.QueryRow()
-
-	fileInfo := model.FileInfo{}
-
-	err := row.Scan(
-		&fileInfo.Id,
-		&fileInfo.CreateAt,
-		&fileInfo.Name,
-		&fileInfo.Extension,
-		&fileInfo.Size,
-	)
-
-	if err != nil {
-		s.logger.Error("error scanning fileinfo row", mlog.String("id", id), mlog.Err(err))
-		return nil, err
+	rawFileInfo, appErr := s.pluginAPI.GetFileInfo(id)
+	if appErr != nil {
+		s.logger.Error("error fetching fileinfo", mlog.String("id", id), mlog.Err(appErr))
 	}
 
-	return &fileInfo, nil
+	fileInfo := &model.FileInfo{
+		Id:        rawFileInfo.Id,
+		Name:      rawFileInfo.Name,
+		Extension: rawFileInfo.Extension,
+		Size:      rawFileInfo.Size,
+		CreateAt:  rawFileInfo.CreateAt,
+		DeleteAt:  rawFileInfo.DeleteAt,
+	}
+
+	return fileInfo, nil
 }
 
 func (s *MattermostAuthLayer) SaveFileInfo(id, fileName, extension string, size int64) error {
@@ -545,6 +528,7 @@ func (s *MattermostAuthLayer) SaveFileInfo(id, fileName, extension string, size 
 			"Name",
 			"Extension",
 			"Size",
+			"DeleteAt",
 		).
 		Values(
 			id,
@@ -552,6 +536,7 @@ func (s *MattermostAuthLayer) SaveFileInfo(id, fileName, extension string, size 
 			fileName,
 			extension,
 			size,
+			0,
 		)
 
 	if _, err := query.Exec(); err != nil {
