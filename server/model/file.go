@@ -4,7 +4,7 @@ package model
 // We only use yhe fields defined below in Focalboard.
 // This model exists to be used in both plugin and personal-server SKU, hence
 // not reusing Mattermost's FileInfo type.
-type FileInfo struct {
+type FileIasdnfo struct {
 	Id        string `json:"id"`
 	Name      string `json:"name"`
 	Extension string `json:"extension"`

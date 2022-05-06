@@ -17,6 +17,8 @@ import (
 	"github.com/mattermost/focalboard/server/utils"
 
 	"github.com/mattermost/mattermost-server/v6/shared/mlog"
+
+	mmmodel "github.com/mattermost/mattermost-server/v6/model"
 )
 
 const (
@@ -501,49 +503,75 @@ func (s *MattermostAuthLayer) CreatePrivateWorkspace(userID string) (string, err
 	return channel.Id, nil
 }
 
-func (s *MattermostAuthLayer) GetFileInfo(id string) (*model.FileInfo, error) {
-	rawFileInfo, appErr := s.pluginAPI.GetFileInfo(id)
+func (s *MattermostAuthLayer) GetFileInfo(id string) (*mmmodel.FileInfo, error) {
+	fileInfo, appErr := s.pluginAPI.GetFileInfo(id)
 	if appErr != nil {
 		s.logger.Error("error fetching fileinfo", mlog.String("id", id), mlog.Err(appErr))
 		return nil, appErr
 	}
 
-	fileInfo := &model.FileInfo{
-		Id:        rawFileInfo.Id,
-		Name:      rawFileInfo.Name,
-		Extension: rawFileInfo.Extension,
-		Size:      rawFileInfo.Size,
-		CreateAt:  rawFileInfo.CreateAt,
-		DeleteAt:  rawFileInfo.DeleteAt,
-	}
+	//fileInfo := &model.FileInfo{
+	//	Id:        rawFileInfo.Id,
+	//	Name:      rawFileInfo.Name,
+	//	Extension: rawFileInfo.Extension,
+	//	Size:      rawFileInfo.Size,
+	//	CreateAt:  rawFileInfo.CreateAt,
+	//	DeleteAt:  rawFileInfo.DeleteAt,
+	//}
 
 	return fileInfo, nil
 }
 
-func (s *MattermostAuthLayer) SaveFileInfo(fileInfo *model.FileInfo) error {
+func (s *MattermostAuthLayer) SaveFileInfo(fileInfo *mmmodel.FileInfo) error {
 	query := s.getQueryBuilder().
 		Insert("FileInfo").
 		Columns(
 			"Id",
+			"CreatorId",
+			"PostId",
 			"CreateAt",
+			"UpdateAt",
+			"DeleteAt",
+			"Path",
+			"ThumbnailPath",
+			"PreviewPath",
 			"Name",
 			"Extension",
 			"Size",
-			"DeleteAt",
+			"MimeType",
+			"Width",
+			"Height",
+			"HasPreviewImage",
+			"MiniPreview",
+			"Content",
+			"RemoteId",
 			"Archived",
 		).
 		Values(
 			fileInfo.Id,
+			fileInfo.CreatorId,
+			fileInfo.PostId,
 			fileInfo.CreateAt,
+			fileInfo.UpdateAt,
+			fileInfo.DeleteAt,
+			fileInfo.Path,
+			fileInfo.ThumbnailPath,
+			fileInfo.PreviewPath,
 			fileInfo.Name,
 			fileInfo.Extension,
 			fileInfo.Size,
-			fileInfo.DeleteAt,
-			fileInfo.Archived,
+			fileInfo.MimeType,
+			fileInfo.Width,
+			fileInfo.Height,
+			fileInfo.HasPreviewImage,
+			fileInfo.MiniPreview,
+			fileInfo.Content,
+			fileInfo.RemoteId,
+			false,
 		)
 
 	sql, params, _ := query.ToSql()
-	
+
 	s.logger.Info(sql)
 	s.logger.Info(fmt.Sprintf("%v", params))
 

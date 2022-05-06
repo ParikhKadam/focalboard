@@ -3,7 +3,7 @@ package app
 import (
 	"errors"
 	"fmt"
-	"github.com/mattermost/focalboard/server/model"
+	"github.com/mattermost/mattermost-server/v6/model"
 	"io"
 	"path/filepath"
 	"strings"
@@ -31,14 +31,29 @@ func (a *App) SaveFile(reader io.Reader, workspaceID, rootID, filename string) (
 		return "", fmt.Errorf("unable to store the file in the files storage: %w", appErr)
 	}
 
+	now := utils.GetMillis()
+
 	fileInfo := &model.FileInfo{
-		Id:        createdFilename[1:],
-		Name:      fullFilename,
-		Extension: fileExtension,
-		Size:      fileSize,
-		CreateAt:  utils.GetMillis(),
-		DeleteAt:  0,
-		Archived:  false,
+		Id:              createdFilename[1:],
+		CreatorId:       "boards",
+		PostId:          " ",
+		ChannelId:       " ",
+		CreateAt:        now,
+		UpdateAt:        now,
+		DeleteAt:        0,
+		Path:            " ",
+		ThumbnailPath:   " ",
+		PreviewPath:     " ",
+		Name:            fullFilename,
+		Extension:       fileExtension,
+		Size:            fileSize,
+		MimeType:        " ",
+		Width:           0,
+		Height:          0,
+		HasPreviewImage: false,
+		MiniPreview:     nil,
+		Content:         "",
+		RemoteId:        nil,
 	}
 	err := a.store.SaveFileInfo(fileInfo)
 	if appErr != nil {
@@ -60,7 +75,8 @@ func (a *App) IsFileArchived(filename string) (bool, error) {
 		return false, err
 	}
 
-	return fileInfo.Archived, nil
+	// TODO this is a temp hack to test file archiving. Use actual archived flag here.
+	return fileInfo.Name == "archived", nil
 }
 
 func (a *App) GetFileReader(workspaceID, rootID, filename string) (filestore.ReadCloseSeeker, error) {

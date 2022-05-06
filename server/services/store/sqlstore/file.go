@@ -2,7 +2,7 @@ package sqlstore
 
 import (
 	sq "github.com/Masterminds/squirrel"
-	"github.com/mattermost/focalboard/server/model"
+	"github.com/mattermost/mattermost-server/v6/model"
 	"github.com/mattermost/mattermost-server/v6/shared/mlog"
 )
 
@@ -25,7 +25,7 @@ func (s *SQLStore) SaveFileInfo(fileInfo *model.FileInfo) error {
 			fileInfo.Extension,
 			fileInfo.Size,
 			fileInfo.DeleteAt,
-			fileInfo.Archived,
+			false,
 		)
 
 	if _, err := query.Exec(); err != nil {
