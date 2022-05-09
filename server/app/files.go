@@ -44,7 +44,7 @@ func (a *App) SaveFile(reader io.Reader, workspaceID, rootID, filename string) (
 		Path:            " ",
 		ThumbnailPath:   " ",
 		PreviewPath:     " ",
-		Name:            fullFilename,
+		Name:            filename,
 		Extension:       fileExtension,
 		Size:            fileSize,
 		MimeType:        " ",
@@ -63,20 +63,23 @@ func (a *App) SaveFile(reader io.Reader, workspaceID, rootID, filename string) (
 	return fullFilename, nil
 }
 
-func (a *App) IsFileArchived(filename string) (bool, error) {
+func (a *App) GetFileInfo(filename string) (*model.FileInfo, error) {
 	if len(filename) == 0 {
-		return false, errors.New("IsFileArchived: empty filename not allowed")
+		return nil, errors.New("IsFileArchived: empty filename not allowed")
 	}
 
 	parts := strings.Split(filename, ".")
 	fileInfoId := parts[0][1:]
 	fileInfo, err := a.store.GetFileInfo(fileInfoId)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
-	// TODO this is a temp hack to test file archiving. Use actual archived flag here.
-	return fileInfo.Name == "archived", nil
+	if fileInfo == nil {
+		return nil, nil
+	}
+
+	return fileInfo, nil
 }
 
 func (a *App) GetFileReader(workspaceID, rootID, filename string) (filestore.ReadCloseSeeker, error) {

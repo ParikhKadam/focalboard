@@ -5,5 +5,5 @@ CREATE TABLE {{.prefix}}file_info (
     name TEXT NOT NULL,
     extension VARCHAR(50) NOT NULL,
     size BIGINT NOT NULL,
-    archived BOOEAN
+    archived BOOLEAN
 ) {{if .mysql}}DEFAULT CHARACTER SET utf8mb4{{end}};

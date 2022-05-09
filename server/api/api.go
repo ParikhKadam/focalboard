@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -1338,14 +1337,29 @@ func (a *API) handleServeFile(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", contentType)
 
-	isArchived, err := a.app.IsFileArchived(filename)
+	fileInfo, err := a.app.GetFileInfo(filename)
 	if err != nil {
 		a.errorResponse(w, r.URL.Path, http.StatusInternalServerError, "", err)
 		return
 	}
 
-	if isArchived {
-		a.errorResponse(w, r.URL.Path, http.StatusBadRequest, "file archived", errors.New("file archived"))
+	// TODO this is a temp hack to test file archiving. Use actual archived flag here.
+	if fileInfo != nil && fileInfo.Name == "archived" {
+		fileMetadata := map[string]interface{}{
+			"archived":  true,
+			"name":      fileInfo.Name,
+			"size":      fileInfo.Size,
+			"extension": fileInfo.Extension,
+		}
+
+		data, err := json.Marshal(fileMetadata)
+		if err != nil {
+			a.logger.Error("failed to marshal archived file metadata", mlog.String("filename", filename), mlog.Err(err))
+			a.errorResponse(w, r.URL.Path, http.StatusInternalServerError, "", err)
+			return
+		}
+
+		jsonBytesResponse(w, http.StatusBadRequest, data)
 		return
 	}
 
